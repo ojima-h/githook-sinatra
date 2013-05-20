@@ -18,7 +18,9 @@ if File.exists?('./repos.rb')
 end
 
 get '/' do
-  'Githook'
+  Githook::Config.repos.map do |repo|
+    repo.name
+  end
 end
 
 Githook::Config.repos.each do |repo|
