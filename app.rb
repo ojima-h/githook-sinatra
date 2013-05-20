@@ -1,13 +1,28 @@
 require 'sinatra'
-require 'logger'
-require 'git'
 
-git = Git.open '/home/kawasemi/public_html', log: Logger.new('log/git.log')
+require 'githook/config'
+require 'githook/command'
+require 'githook/repo'
+
+require 'yaml'
+
+configure :development, :test do
+  set :repos, './spec/repos-example.rb'
+end
+configure :production do
+  set :repos, './repos.rb'
+end
+
+if File.exists?('./repos.rb')
+  Githook::Config.module_eval(File.read(settings.repos))
+end
 
 get '/' do
-  'hello'
+  'Githook'
 end
-post '/kawasemi' do
-  git.remote(:origin).fetch
-  git.reset_hard 'origin/master'
+
+Githook::Config.repos.each do |repo|
+  post "/#{repo.name}" do
+    Githook::Command.new(repo).sync
+  end
 end
